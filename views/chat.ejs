@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat UI</title>
+  <link rel="stylesheet" href="chat.css">
+
+ <div class="chat-container">
+    <div class="chat-header">
+      Chat Room
+      <button class="go-dashboard" onclick="window.location.href='/'">Dashboard</button>
+    </div>
+    <div class="chat-subheader" id="chat-subheader">
+      Chatting with: <span id="chattingWith">Unknown</span>
+    </div>
+    <div class="chat-box" id="chat-box"></div>
+    <div class="input-box">
+      <form id="sendMessageForm">
+        <input type="text" id="message" placeholder="Type a message..." />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const username = '<%= username %>';
+    const selectedUsername = '<%= selectedUsername %>' || 'DefaultUser';
+    const chatBox = document.getElementById("chat-box");
+    const chattingWith = document.getElementById("chattingWith");
+
+    // Set the subheader
+    chattingWith.textContent = selectedUsername;
+
+    // Register the user
+    socket.emit('register', username);
+
+    // Append message to the chat box
+    function appendMessage(content, type) {
+      const messageElement = document.createElement("div");
+      messageElement.classList.add("chat-message", type);
+      messageElement.textContent = content;
+      chatBox.prepend(messageElement); // Append messages at the top for reversed order
+    }
+
+    // Send private message
+    document.getElementById("sendMessageForm").addEventListener("submit", function (e) {
+      e.preventDefault();
+      const message = document.getElementById("message").value;
+
+      if (selectedUsername && message) {
+        socket.emit("private message", { to: selectedUsername, message });
+        appendMessage(`You: ${message}`, "sender"); // Show sent message
+        document.getElementById("message").value = ''; // Clear message field
+      }
+    });
+
+    // Listen for incoming private messages
+    socket.on("private message", function (data) {
+      const { from, message } = data;
+      if (from === selectedUsername) {
+        appendMessage(`${from}: ${message}`, "receiver"); // Show received message in this chat
+      }
+    });
+
+    // Load stored messages for the current chat session
+    socket.emit("load messages", selectedUsername);
+
+    // Listen for historical messages
+    socket.on("load messages", function (messages) {
+      messages.forEach((msg) => {
+        const type = msg.from === username ? "sender" : "receiver";
+        appendMessage(`${msg.from}: ${msg.message}`, type);
+      });
+    });
+  </script>
+
+</body>
+  </html>

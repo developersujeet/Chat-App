@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Responsive Dashboard</title>
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar" id="sidebar">
+    <img src="/avtar.jpg" alt="Profile Picture">
+    <h3><%= username %></h3>
+    <p><%= email %></p>
+    <button onclick="toggleInput('username')">Change Username</button>
+    <input type="text" id="username-input" class="hidden-input" placeholder="Enter new username">
+    <button id="change-username" class="hidden-input" onclick="changeUsername()">Change</button>
+
+    <button onclick="toggleInput('password')">Change Password</button>
+    <input type="password" id="password-input" class="hidden-input" placeholder="Enter new password">
+    <button id="change-password" class="hidden-input" onclick="changePassword()">Change</button>
+
+    <button id="logout" class="logout">Logout</button>
+  </div>
+
+  <!-- Hamburger Icon -->
+  <button class="hamburger" id="hamburger">&#9776;</button>
+
+  <!-- Main Content -->
+  <div class="main-content" id="main-content">
+    <!-- Header -->
+    <div class="header">
+      <h1>Welcome to your Dashboard</h1>
+    </div>
+
+    <!-- Chat List -->
+    <div id="chat-list" class="chat-list">
+      <% activeUsers.forEach(function(user) { %>
+      <div>
+        <div class="user-container chat-item" data-username="<%= user %>">
+          <img src="/avtar.jpg" alt="User">
+          <h4><%= user %></h4>
+        </div>
+      </div>
+      <% }); %>
+    </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    // Establish socket connection
+    const socket = io();
+    const username = '<%= username %>';
+
+    // Register user with the server
+    socket.emit('register', username);
+
+    // DOM elements
+    const sidebar = document.getElementById('sidebar');
+    const hamburger = document.getElementById('hamburger');
+    const mainContent = document.getElementById('main-content');
+
+    // Toggle Sidebar Visibility
+    hamburger.addEventListener('click', () => {
+      sidebar.classList.toggle('show'); // Show sidebar on mobile
+      mainContent.classList.toggle('sidebar-open');
+      hamburger.classList.toggle('open'); // Change hamburger color
+    });
+
+    // Show/Hide Input Fields
+    function toggleInput(type) {
+      const input = document.getElementById(`${type}-input`);
+      const button = document.getElementById(`change-${type}`);
+      if (input.classList.contains('hidden-input')) {
+        input.classList.remove('hidden-input');
+        button.classList.remove('hidden-input');
+      } else {
+        input.classList.add('hidden-input');
+        button.classList.add('hidden-input');
+      }
+    }
+
+    // Change Username
+    function changeUsername() {
+      const newUsername = document.getElementById('username-input').value;
+      if (newUsername) {
+        alert(`Username changed to: ${newUsername}`);
+      }
+    }
+
+    // Change Password
+    function changePassword() {
+      const newPassword = document.getElementById('password-input').value;
+      if (newPassword) {
+        alert(`Password changed to: ${newPassword}`);
+      }
+    }
+
+    // Logout functionality
+    document.getElementById("logout").addEventListener("click", function () {
+      socket.emit("logout", username); // Emit logout event
+      fetch('/logout'); // Trigger the logout route on the server
+      window.location.href = "/login"; // Redirect to login page
+    });
+
+    // Handle chat item click
+    document.getElementById('chat-list').addEventListener('click', function (e) {
+      const target = e.target.closest('.user-container');
+      if (target) {
+        const selectedUsername = target.dataset.username;
+
+        // Redirect to chat page with both username and selectedUsername as query parameters
+        window.location.href = `/chat?username=${encodeURIComponent(username)}&selectedUsername=${encodeURIComponent(selectedUsername)}`;
+      }
+    });
+  </script>
+</body>
+
+      </html>
