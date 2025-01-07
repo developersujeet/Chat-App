@@ -8,7 +8,7 @@ const cookieParser = require("cookie-parser");
 const fs = require("fs");
 const server = http.createServer(app);
 const io = socketIO(server);
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const usersFile = path.join(__dirname, "users.json");
 
 app.use(bodyParser.json());
