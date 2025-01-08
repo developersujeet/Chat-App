@@ -42,7 +42,7 @@
       const messageElement = document.createElement("div");
       messageElement.classList.add("chat-message", type);
       messageElement.textContent = content;
-      chatBox.prepend(messageElement); // Append messages at the top for reversed order
+      chatBox.append(messageElement);
     }
 
     // Send private message
